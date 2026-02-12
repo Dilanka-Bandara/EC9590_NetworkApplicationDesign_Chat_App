@@ -3,14 +3,10 @@ import threading
 import sys
 import json
 
-# Configuration
 HOST = '127.0.0.1'
 PORT = 55555
 
 def receive_messages(client_socket):
-    """
-    Listens for incoming messages from the server in a separate thread.
-    """
     while True:
         try:
             message = client_socket.recv(1024).decode('utf-8')
@@ -20,72 +16,73 @@ def receive_messages(client_socket):
                 sys.exit()
             
             try:
-                # Parse JSON message
                 msg_json = json.loads(message)
                 sender = msg_json.get('sender')
                 text = msg_json.get('text')
                 
-                # We use \r to clear the current line so the incoming message 
-                # doesn't mess up your typing bar.
-                print(f"\r<{sender}>: {text}\nYou: ", end="", flush=True)
-            except json.JSONDecodeError:
-                print(f"\r{message}\nYou: ", end="", flush=True)
+                # Print message cleanly over input prompt
+                sys.stdout.write(f"\r<{sender}>: {text}\n")
+                sys.stdout.write("You: ")
+                sys.stdout.flush()
                 
-        except Exception as e:
-            print(f"\n[Error] Connection lost: {e}")
-            client_socket.close()
-            sys.exit()
+            except json.JSONDecodeError:
+                pass
+        except:
             break
 
 def start_client():
-    # Task 01: Create socket and connect
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         client.connect((HOST, PORT))
-    except ConnectionRefusedError:
-        print("Could not connect to the server. Is it running?")
+    except:
+        print("Could not connect to server.")
         return
 
-    # User Login
     username = input("Input your user name: ")
     client.send(username.encode('utf-8'))
 
-    print(f"Logged in as {username}. Usage: 'TargetUser: Message'")
+    print(f"Logged in as {username}.")
+    print("------------------------------------------------------")
+    print("Commands:")
+    print("1. To Chat:  'Recipient: Message'")
+    print("2. To Exit:  Type 'exit'")
     print("------------------------------------------------------")
 
-    # Task 02: Handle concurrency (receiving while sending)
-    # On Windows, we use a Thread instead of select() for the 'listening' part.
+    # Start listening thread
     recv_thread = threading.Thread(target=receive_messages, args=(client,))
-    recv_thread.daemon = True # Thread dies when main program dies
+    recv_thread.daemon = True
     recv_thread.start()
 
-    # Main Loop: Handle User Input (Sending)
     while True:
         try:
-            user_input = input("You: ") # Simple blocking input
-            
+            sys.stdout.write("You: ")
+            sys.stdout.flush()
+            user_input = sys.stdin.readline().strip()
+
             if not user_input:
                 continue
 
-            # Parse input to extract Target and Message
+            # === NEW FUNCTION: EXIT COMMAND ===
+            if user_input.lower() == 'exit':
+                print("Exiting chat...")
+                client.close()
+                sys.exit() # Completely stops the program
+            
+            # Normal Message Logic
             if ":" in user_input:
                 target_user, text_content = user_input.split(":", 1)
-                target_user = target_user.strip()
-                text_content = text_content.strip()
-
-                # Task 03: JSON structure
+                
                 json_packet = {
                     "status": "1",
                     "sender": username,
-                    "receiver": target_user,
-                    "text": text_content
+                    "receiver": target_user.strip(),
+                    "text": text_content.strip()
                 }
                 client.send(json.dumps(json_packet).encode('utf-8'))
             else:
-                print("[System]: Invalid format. Use 'Recipient: Message'")
+                print("[SYSTEM]: Use format 'Recipient: Message'")
 
         except KeyboardInterrupt:
-            print("\nExiting...")
             client.close()
             sys.exit()
 
