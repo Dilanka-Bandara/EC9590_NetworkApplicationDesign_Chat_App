@@ -3,86 +3,102 @@ import threading
 import json
 
 # Configuration
-HOST = '127.0.0.1'  # Localhost
+HOST = '127.0.0.1'
 PORT = 55555
 
-# Dictionary to manage clients: {username: client_socket}
-# Covers Task 03: Client management [cite: 65]
+# Dictionary to map 'username' -> 'client_socket'
 active_clients = {}
 
 def handle_client(client_socket, client_address):
-    """
-    Handles a single client connection.
-    """
     username = None
     try:
-        # Step 1: Receive the username upon connection
+        # Receive username upon connection
         username = client_socket.recv(1024).decode('utf-8')
         
         if username in active_clients:
-            client_socket.send("Username already taken. Connection closed.".encode('utf-8'))
+            client_socket.send("Username already taken.".encode('utf-8'))
             client_socket.close()
             return
 
         active_clients[username] = client_socket
-        print(f"[NEW CONNECTION] User '{username}' connected from {client_address}")
+        print(f"[CONNECTED] New client: {username}")
         
-        # Notify user they are connected
-        welcome_msg = {"status": "1", "sender": "Server", "receiver": username, "text": "Welcome to ClassChat!"}
+        # Send welcome message
+        welcome_msg = {
+            "status": "1",
+            "sender": "Server",
+            "receiver": username,
+            "text": "Connected! Type 'exit' to leave."
+        }
         client_socket.send(json.dumps(welcome_msg).encode('utf-8'))
 
-        # Step 2: Listen for messages
+        # Main Listener Loop
         while True:
             message_data = client_socket.recv(1024).decode('utf-8')
+            
+            # If recv returns empty bytes, the client has disconnected
             if not message_data:
                 break
             
-            # Parse the JSON message 
             try:
                 msg_json = json.loads(message_data)
                 target_user = msg_json.get('receiver')
-                text_content = msg_json.get('text')
                 sender = msg_json.get('sender')
+                text = msg_json.get('text')
 
-                # Task 03: Forward message to receiving client [cite: 67]
+                # Check if the user explicitly sent an "exit" message
+                if text.lower() == 'exit':
+                    break
+
+                # Forwarding Logic (Task 03)
                 if target_user in active_clients:
                     target_socket = active_clients[target_user]
                     target_socket.send(json.dumps(msg_json).encode('utf-8'))
                     print(f"[FORWARD] {sender} -> {target_user}")
                 else:
-                    # Task 03: Handle exception if receiver is not in system 
+                    # Send error if user not found
                     error_msg = {
-                        "status": "0", 
-                        "sender": "Server", 
-                        "receiver": sender, 
+                        "status": "0", "sender": "Server", "receiver": sender,
                         "text": f"Error: User '{target_user}' is not online."
                     }
                     client_socket.send(json.dumps(error_msg).encode('utf-8'))
 
             except json.JSONDecodeError:
-                print(f"Received malformed JSON from {username}")
+                pass
 
-    except Exception as e:
-        print(f"Error handling client {username}: {e}")
+    except ConnectionResetError:
+        pass 
     finally:
-        # Cleanup
+        # === NEW FUNCTION: BROADCAST EXIT ===
         if username and username in active_clients:
             del active_clients[username]
-            print(f"[DISCONNECT] User '{username}' disconnected.")
+            print(f"[DISCONNECT] {username} has left.")
+            
+            # Create the exit notification message
+            exit_announcement = {
+                "status": "1",
+                "sender": "Server", 
+                "receiver": "All",
+                "text": f"User '{username}' has left the chat."
+            }
+            
+            # Loop through all remaining clients and send the notification
+            for user, socket_obj in active_clients.items():
+                try:
+                    socket_obj.send(json.dumps(exit_announcement).encode('utf-8'))
+                except:
+                    pass # Ignore errors if sending to a stale socket
+                    
         client_socket.close()
 
 def start_server():
-    # Task 01: Create, Bind, Listen [cite: 11, 13, 15]
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
     server.listen()
-    print(f"[STARTING] Server is listening on {HOST}:{PORT}")
+    print(f"[STARTING] Server listening on {HOST}:{PORT}")
 
     while True:
-        # Task 01: Accept connection [cite: 16]
         client_sock, addr = server.accept()
-        
-        # Task 02: Use Thread + Socket for concurrent clients 
         thread = threading.Thread(target=handle_client, args=(client_sock, addr))
         thread.start()
 
