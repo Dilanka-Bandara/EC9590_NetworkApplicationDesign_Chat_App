@@ -15,7 +15,7 @@ def receive_messages(client):
             else:
                 break
         except:
-            print("Error receiving message.")
+            print("Disconnected from server.")
             break
 
 def start_client():
