@@ -47,7 +47,7 @@ root.resizable(False, False)
 header = tk.Frame(root, bg=HEADER_BG, height=40)
 header.pack(fill=tk.X)
 header.pack_propagate(False)
-tk.Label(header, text="ChatBot - Online", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=10)
+tk.Label(header, text="ChatAPP - Online", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=10)
 
 # Instruction
 tk.Label(root, text="Kindly enter your message below to\nsend a request to the server.", bg=BG_WHITE, fg=TEXT_LIGHT, font=FONT_BODY, justify=tk.CENTER).pack(pady=(20, 15))

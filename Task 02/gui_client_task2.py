@@ -80,7 +80,7 @@ except:
 header = tk.Frame(root, bg=HEADER_BG, height=45)
 header.pack(side=tk.TOP, fill=tk.X)
 header.pack_propagate(False)
-tk.Label(header, text="ChatBot - Echo Chat", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=12)
+tk.Label(header, text="ChatAPP - Echo Chat", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=12)
 
 # 2. Input Area (***FIX***: Packed to the BOTTOM first so it never gets cut off)
 input_frame = tk.Frame(root, bg=BG_WHITE)

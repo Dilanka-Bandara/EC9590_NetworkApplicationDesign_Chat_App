@@ -105,7 +105,7 @@ def build_chat_interface():
     header = tk.Frame(root, bg=HEADER_BG, height=45)
     header.pack(fill=tk.X)
     header.pack_propagate(False)
-    tk.Label(header, text=f"ChatBot - {global_username}", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=12)
+    tk.Label(header, text=f"ChatAPP - {global_username}", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=12)
 
     chat_frame = tk.Frame(root, bg=BORDER_COLOR, bd=1)
     chat_frame.pack(padx=20, pady=15, fill=tk.BOTH, expand=True)
@@ -153,7 +153,7 @@ login_frame.pack(fill=tk.BOTH, expand=True)
 header = tk.Frame(login_frame, bg=HEADER_BG, height=45)
 header.pack(fill=tk.X)
 header.pack_propagate(False)
-tk.Label(header, text="ChatBot - Online", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=12)
+tk.Label(header, text="ChatAPP - Online", bg=HEADER_BG, fg=BG_WHITE, font=FONT_HEADER).pack(pady=12)
 
 tk.Label(login_frame, text="Kindly enter your name below to begin\nchatting with the next available agent.", bg=BG_WHITE, fg=TEXT_LIGHT, font=FONT_BODY, justify=tk.CENTER).pack(pady=(20, 15))
 
